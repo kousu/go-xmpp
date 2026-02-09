@@ -609,6 +609,7 @@ type Chat struct {
 	Oobdesc   string
 	ID        string
 	ReplaceID string
+	ReplyTo   string // XEP-0461: Reply to message ID
 	Roster    Roster
 	Other     []string
 	OtherElem []XMLElement
@@ -867,7 +868,7 @@ func (c *Client) Recv() (stanza interface{}, err error) {
 
 // Send sends the message wrapped inside an XMPP message stanza body.
 func (c *Client) Send(chat Chat) (n int, err error) {
-	var subtext, thdtext, oobtext, msgidtext, msgcorrecttext string
+	var subtext, thdtext, oobtext, msgidtext, msgcorrecttext, replytext string
 	if chat.Subject != `` {
 		subtext = `<subject>` + xmlEscape(chat.Subject) + `</subject>`
 	}
@@ -892,7 +893,12 @@ func (c *Client) Send(chat Chat) (n int, err error) {
 		msgcorrecttext = `<replace id='` + xmlEscape(chat.ReplaceID) + `' xmlns='urn:xmpp:message-correct:0'/>`
 	}
 
-	stanza := "<message to='%s' type='%s' " + msgidtext + " xml:lang='en'>" + subtext + "<body>%s</body>" + msgcorrecttext + oobtext + thdtext + "</message>"
+	// XEP-0461: Message Replies
+	if chat.ReplyTo != `` {
+		replytext = `<reply to='` + xmlEscape(chat.ReplyTo) + `' xmlns='urn:xmpp:reply:0'/>`
+	}
+
+	stanza := "<message to='%s' type='%s' " + msgidtext + " xml:lang='en'>" + subtext + "<body>%s</body>" + msgcorrecttext + replytext + oobtext + thdtext + "</message>"
 
 	return fmt.Fprintf(c.conn, stanza, xmlEscape(chat.Remote), xmlEscape(chat.Type), xmlEscape(chat.Text))
 }
