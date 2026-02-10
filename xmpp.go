@@ -609,7 +609,8 @@ type Chat struct {
 	Oobdesc   string
 	ID        string
 	ReplaceID string
-	ReplyTo   string // XEP-0461: Reply to message ID
+	ReplyID   string // XEP-0461: id of the message being replied to (use stanza-id for groupchat)
+	ReplyTo   string // XEP-0461: JID of the author of the message being replied to
 	Roster    Roster
 	Other     []string
 	OtherElem []XMLElement
@@ -1020,6 +1021,12 @@ type clientMessageCorrect struct {
 	ID      string   `xml:"id,attr"`
 }
 
+type clientReply struct {
+	XMLName xml.Name `xml:"urn:xmpp:reply:0 reply"`
+	ID      string   `xml:"id,attr"`
+	To      string   `xml:"to,attr"`
+}
+
 // RFC 3921  B.1  jabber:client
 type clientMessage struct {
 	XMLName xml.Name `xml:"jabber:client message"`
@@ -1033,6 +1040,7 @@ type clientMessage struct {
 	Body      string `xml:"body"`
 	Thread    string `xml:"thread"`
 	ReplaceID clientMessageCorrect
+	Reply     clientReply
 
 	// Pubsub
 	Event clientPubsubEvent `xml:"event"`
