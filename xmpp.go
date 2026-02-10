@@ -686,6 +686,8 @@ func (c *Client) Recv() (stanza interface{}, err error) {
 				Thread:    v.Thread,
 				ID:        v.ID,
 				ReplaceID: v.ReplaceID.ID,
+				ReplyID:   v.Reply.ID,
+				ReplyTo:   v.Reply.To,
 				Other:     v.OtherStrings(),
 				OtherElem: v.Other,
 				Stamp:     stamp,
@@ -869,7 +871,7 @@ func (c *Client) Recv() (stanza interface{}, err error) {
 
 // Send sends the message wrapped inside an XMPP message stanza body.
 func (c *Client) Send(chat Chat) (n int, err error) {
-	var subtext, thdtext, oobtext, msgidtext, msgcorrecttext, replytext string
+	var subtext, thdtext, oobtext, msgidtext, msgcorrecttext string
 	if chat.Subject != `` {
 		subtext = `<subject>` + xmlEscape(chat.Subject) + `</subject>`
 	}
@@ -894,12 +896,16 @@ func (c *Client) Send(chat Chat) (n int, err error) {
 		msgcorrecttext = `<replace id='` + xmlEscape(chat.ReplaceID) + `' xmlns='urn:xmpp:message-correct:0'/>`
 	}
 
-	// XEP-0461: Message Replies
-	if chat.ReplyTo != `` {
-		replytext = `<reply to='` + xmlEscape(chat.ReplyTo) + `' xmlns='urn:xmpp:reply:0'/>`
+	var replytext string
+	if chat.ReplyID != `` {
+		replytext = `<reply id='` + xmlEscape(chat.ReplyID) + `'`
+		if chat.ReplyTo != `` {
+			replytext += ` to='` + xmlEscape(chat.ReplyTo) + `'`
+		}
+		replytext += ` xmlns='urn:xmpp:reply:0'/>`
 	}
 
-	stanza := "<message to='%s' type='%s' " + msgidtext + " xml:lang='en'>" + subtext + "<body>%s</body>" + msgcorrecttext + replytext + oobtext + thdtext + "</message>"
+	stanza := "<message to='%s' type='%s' " + msgidtext + " xml:lang='en'>" + subtext + "<body>%s</body>" + replytext + msgcorrecttext + oobtext + thdtext + "</message>"
 
 	return fmt.Fprintf(c.conn, stanza, xmlEscape(chat.Remote), xmlEscape(chat.Type), xmlEscape(chat.Text))
 }
