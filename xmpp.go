@@ -611,6 +611,8 @@ type Chat struct {
 	ReplaceID string
 	ReplyID   string // XEP-0461: id of the message being replied to (use stanza-id for groupchat)
 	ReplyTo   string // XEP-0461: JID of the author of the message being replied to
+	StanzaID  string // XEP-0359: refers to stanza-id but named Stanza for brevity
+	StanzaBy  string // XEP-0359: refers to stanza-id but named Stanza for brevity
 	Roster    Roster
 	Other     []string
 	OtherElem []XMLElement
@@ -688,6 +690,8 @@ func (c *Client) Recv() (stanza interface{}, err error) {
 				ReplaceID: v.ReplaceID.ID,
 				ReplyID:   v.Reply.ID,
 				ReplyTo:   v.Reply.To,
+				StanzaID:  v.StanzaID.ID,
+				StanzaBy:  v.StanzaID.By,
 				Other:     v.OtherStrings(),
 				OtherElem: v.Other,
 				Stamp:     stamp,
@@ -1033,6 +1037,12 @@ type clientReply struct {
 	To      string   `xml:"to,attr"`
 }
 
+type clientStanzaID struct {
+	XMLName xml.Name `xml:"urn:xmpp:stanza-id:0 stanza-id"`
+	ID      string   `xml:"id,attr"`
+	By      string   `xml:"by,attr"`
+}
+
 // RFC 3921  B.1  jabber:client
 type clientMessage struct {
 	XMLName xml.Name `xml:"jabber:client message"`
@@ -1047,6 +1057,7 @@ type clientMessage struct {
 	Thread    string `xml:"thread"`
 	ReplaceID clientMessageCorrect
 	Reply     clientReply
+  StanzaID  clientStanzaID
 
 	// Pubsub
 	Event clientPubsubEvent `xml:"event"`

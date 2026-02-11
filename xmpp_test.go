@@ -56,7 +56,7 @@ func (*testConn) SetWriteDeadline(time.Time) error {
 }
 
 var text = strings.TrimSpace(`
-<message xmlns="jabber:client" id="3" type="error" to="123456789@gcm.googleapis.com/ABC">
+<message xmlns="jabber:client" id="" type="error" to="123456789@gcm.googleapis.com/ABC">
 	<gcm xmlns="google:mobile:data">
 		{"random": "&lt;text&gt;"}
 	</gcm>
@@ -150,6 +150,7 @@ func TestSendReply(t *testing.T) {
 		Text:    "This is a reply",
 		ID:      "msg-123",
 		ReplyTo: "original-msg-456",
+		ReplyID: "reply-id-789",
 	}
 
 	_, err := c.Send(chat)
@@ -160,7 +161,7 @@ func TestSendReply(t *testing.T) {
 	output := buf.String()
 
 	// Check that the reply element is present with correct namespace
-	expectedReply := `<reply to='original-msg-456' xmlns='urn:xmpp:reply:0'/>`
+	expectedReply := `<reply id='reply-id-789' to='original-msg-456' xmlns='urn:xmpp:reply:0'/>`
 	if !strings.Contains(output, expectedReply) {
 		t.Errorf("Send() output missing XEP-0461 reply element.\nGot: %s\nExpected to contain: %s", output, expectedReply)
 	}
