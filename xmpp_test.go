@@ -56,7 +56,7 @@ func (*testConn) SetWriteDeadline(time.Time) error {
 }
 
 var text = strings.TrimSpace(`
-<message xmlns="jabber:client" id="3" type="error" to="123456789@gcm.googleapis.com/ABC">
+<message xmlns="jabber:client" id="" type="error" to="123456789@gcm.googleapis.com/ABC">
 	<gcm xmlns="google:mobile:data">
 		{"random": "&lt;text&gt;"}
 	</gcm>
@@ -122,12 +122,13 @@ var emptyPubSub = strings.TrimSpace(`
   </pubsub>
 </iq>
 `)
+
 func TestEmptyPubsub(t *testing.T) {
 	var c Client
 	c.conn = tConnect(emptyPubSub)
 	c.p = xml.NewDecoder(c.conn)
 	m, err := c.Recv()
-	
+
 	switch m.(type) {
 	case AvatarData:
 		if err == nil {
@@ -136,5 +137,76 @@ func TestEmptyPubsub(t *testing.T) {
 	default:
 		t.Errorf("Recv() = %v", m)
 		t.Errorf("Expected a return value of AvatarData")
+	}
+}
+
+func TestSendReply(t *testing.T) {
+	var c Client
+	buf := &bytes.Buffer{}
+	c.conn = &testConn{buf}
+
+	chat := Chat{
+		Remote:  "room@conference.example.com",
+		Type:    "groupchat",
+		Text:    "This is a reply",
+		ID:      "msg-123",
+		ReplyTo: "original-msg-456",
+		ReplyID: "reply-id-789",
+	}
+
+	_, err := c.Send(chat)
+	if err != nil {
+		t.Fatalf("Send() returned error: %v", err)
+	}
+
+	output := buf.String()
+
+	// Check that the reply element is present with correct namespace
+	expectedReply := `<reply id='reply-id-789' to='original-msg-456' xmlns='urn:xmpp:reply:0'/>`
+	if !strings.Contains(output, expectedReply) {
+		t.Errorf("Send() output missing XEP-0461 reply element.\nGot: %s\nExpected to contain: %s", output, expectedReply)
+	}
+
+	// Check that the body is present
+	if !strings.Contains(output, "<body>This is a reply</body>") {
+		t.Errorf("Send() output missing body element.\nGot: %s", output)
+	}
+
+	// Check message attributes
+	if !strings.Contains(output, "to='room@conference.example.com'") {
+		t.Errorf("Send() output missing 'to' attribute.\nGot: %s", output)
+	}
+	if !strings.Contains(output, "type='groupchat'") {
+		t.Errorf("Send() output missing 'type' attribute.\nGot: %s", output)
+	}
+}
+
+func TestSendWithoutReply(t *testing.T) {
+	var c Client
+	buf := &bytes.Buffer{}
+	c.conn = &testConn{buf}
+
+	chat := Chat{
+		Remote: "room@conference.example.com",
+		Type:   "groupchat",
+		Text:   "Regular message",
+		ID:     "msg-789",
+	}
+
+	_, err := c.Send(chat)
+	if err != nil {
+		t.Fatalf("Send() returned error: %v", err)
+	}
+
+	output := buf.String()
+
+	// Check that no reply element is present when ReplyTo is empty
+	if strings.Contains(output, "<reply") {
+		t.Errorf("Send() output should not contain reply element when ReplyTo is empty.\nGot: %s", output)
+	}
+
+	// Check that the body is still present
+	if !strings.Contains(output, "<body>Regular message</body>") {
+		t.Errorf("Send() output missing body element.\nGot: %s", output)
 	}
 }
