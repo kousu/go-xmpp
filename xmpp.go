@@ -609,10 +609,7 @@ type Chat struct {
 	Oobdesc   string
 	ID        string
 	ReplaceID string
-	ReplyID   string // XEP-0461: id of the message being replied to (use stanza-id for groupchat)
-	ReplyTo   string // XEP-0461: JID of the author of the message being replied to
-	StanzaID  string // XEP-0359: refers to stanza-id but named Stanza for brevity
-	StanzaBy  string // XEP-0359: refers to stanza-id but named Stanza for brevity
+	Reply     string // XEP-0461: id of the message being replied to (use stanza-id for groupchat)
 	Roster    Roster
 	Other     []string
 	OtherElem []XMLElement
@@ -688,10 +685,6 @@ func (c *Client) Recv() (stanza interface{}, err error) {
 				Thread:    v.Thread,
 				ID:        v.ID,
 				ReplaceID: v.ReplaceID.ID,
-				ReplyID:   v.Reply.ID,
-				ReplyTo:   v.Reply.To,
-				StanzaID:  v.StanzaID.ID,
-				StanzaBy:  v.StanzaID.By,
 				Other:     v.OtherStrings(),
 				OtherElem: v.Other,
 				Stamp:     stamp,
