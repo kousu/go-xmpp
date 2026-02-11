@@ -1038,7 +1038,7 @@ type clientReply struct {
 }
 
 type clientStanzaID struct {
-	XMLName xml.Name `xml:"urn:xmpp:stanza-id:0 stanza-id"`
+	XMLName xml.Name `xml:"urn:xmpp:sid:0 stanza-id"`
 	ID      string   `xml:"id,attr"`
 	By      string   `xml:"by,attr"`
 }
