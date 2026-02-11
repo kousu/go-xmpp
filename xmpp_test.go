@@ -122,6 +122,7 @@ var emptyPubSub = strings.TrimSpace(`
   </pubsub>
 </iq>
 `)
+
 func TestEmptyPubsub(t *testing.T) {
 	var c Client
 	c.conn = tConnect(emptyPubSub)

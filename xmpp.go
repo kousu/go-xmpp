@@ -1057,7 +1057,7 @@ type clientMessage struct {
 	Thread    string `xml:"thread"`
 	ReplaceID clientMessageCorrect
 	Reply     clientReply
-  StanzaID  clientStanzaID
+	StanzaID  clientStanzaID
 
 	// Pubsub
 	Event clientPubsubEvent `xml:"event"`
